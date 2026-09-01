@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <title>Jujutsu Kaisen | Character Database</title>
+    
+    <!-- Cross-Platform Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Rajdhani:wght@500;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* ==========================================
+           1. CSS VARIABLES & SYSTEM ARCHITECTURE
+           ========================================== */
+        :root {
+            --theme-color: #ff0000; 
+            --theme-dark: #0a0404;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --panel-bg: rgba(15, 10, 10, 0.75);
+            --border-glass: rgba(255, 255, 255, 0.12);
+            --safe-top: env(safe-area-inset-top, 0px);
+            --safe-bottom: env(safe-area-inset-bottom, 0px);
+            --safe-left: env(safe-area-inset-left, 0px);
+            --safe-right: env(safe-area-inset-right, 0px);
+            --roster-width: 85px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html {
+            scroll-behavior: smooth;
+            background-color: #050202;
+        }
+
+        body {
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--theme-dark);
+            color: var(--text-main);
+            min-height: 100vh;
+            min-height: 100dvh;
+            overflow-x: hidden;
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            transition: background-image 0.6s ease-in-out, background-color 0.5s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        /* ------------------------------------------
+           FIXED Z-INDEX FOR VIDEO & OVERLAY
+           ------------------------------------------ */
+        #bg-video {
+            position: fixed;
+            top: 50%; left: 50%;
+            min-width: 100vw; min-height: 100vh; min-height: 100dvh;
+            width: auto; height: auto;
+            transform: translate3d(-50%, -50%, 0);
+            z-index: 1; 
+            object-fit: cover;
+            opacity: 0;
+            display: none;
+            transition: opacity 0.6s ease-in-out;
+            pointer-events: none;
+        }
+
+        .bg-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh; height: 100dvh;
+            background: radial-gradient(circle at center, rgba(5, 2, 2, 0.65) 0%, rgba(5, 2, 2, 0.96) 100%);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            z-index: 2; 
+            transition: background 0.5s ease, backdrop-filter 0.5s ease;
+            pointer-events: none;
+        }
+
+        body.video-mode .bg-overlay {
+            background: rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(0px);
+            -webkit-backdrop-filter: blur(0px);
+        }
+
+        /* ==========================================
+           2. ADAPTIVE CHARACTER ROSTER MENU
+           ========================================== */
+        .roster-menu {
+            position: fixed;
+            left: calc(15px + var(--safe-left));
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            z-index: 300;
+            background: rgba(10, 10, 15, 0.65);
+            padding: 18px 12px;
+            border-radius: 40px;
+            border: 1px solid var(--border-glass);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            max-height: 85vh;
+            max-height: 85dvh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+        }
+
+        .roster-menu::-webkit-scrollbar { width: 0px; }
+
+        .char-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.3s ease, opacity 0.3s ease;
+            overflow: hidden;
+            opacity: 0.5;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .char-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .char-icon:hover, .char-icon.active {
+            opacity: 1;
+            border-color: var(--theme-color);
+            transform: scale(1.18);
+            box-shadow: 0 0 16px var(--theme-color);
+        }
+
+        /* Desktop Hover Tooltips */
+        @media (hover: hover) and (pointer: fine) {
+            .char-icon::after {
+                content: attr(data-name);
+                position: absolute;
+                left: 65px;
+                top: 50%;
+                transform: translateY(-50%) translateX(-10px);
+                background: var(--theme-color);
+                color: #000;
+                padding: 6px 12px;
+                border-radius: 6px;
+                font-size: 0.8rem;
+                font-weight: 700;
+                font-family: 'Oswald', sans-serif;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.3s ease, transform 0.3s ease;
+                white-space: nowrap;
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+                z-index: 201;
+            }
+            .char-icon:hover::after {
+                opacity: 1;
+                transform: translateY(-50%) translateX(0);
+            }
+        }
+
+        /* ==========================================
+           3. RESPONSIVE NAVIGATION
+           ========================================== */
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: calc(15px + var(--safe-top)) calc(30px + var(--safe-right)) 15px calc(var(--roster-width) + 35px + var(--safe-left));
+            background: linear-gradient(180deg, rgba(5, 5, 10, 0.85) 0%, rgba(5, 5, 10, 0.3) 70%, transparent 100%);
+            position: sticky;
+            top: 0;
+            z-index: 200;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-logo {
+            font-family: 'Oswald', sans-serif;
+            font-size: clamp(1.4rem, 2.5vw, 2rem);
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: #fff;
+            text-shadow: 0 0 15px var(--theme-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            white-space: nowrap;
+        }
+
+        .nav-logo i { color: var(--theme-color); transition: color 0.4s ease; }
+
+        .nav-links {
+            display: flex;
+            gap: clamp(15px, 2.2vw, 30px);
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 5px 0;
+            scrollbar-width: none;
+        }
+        .nav-links::-webkit-scrollbar { display: none; }
+
+        .nav-links a {
+            color: var(--text-main);
+            text-decoration: none;
+            font-size: clamp(0.85rem, 1.2vw, 1.05rem);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            transition: color 0.3s ease, text-shadow 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            white-space: nowrap;
+            padding: 4px 2px;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -2px; left: 0; width: 0%; height: 2px;
+            background: var(--theme-color);
+            transition: width 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+            box-shadow: 0 0 10px var(--theme-color);
+        }
+
+        .nav-links a:hover::after, .nav-links a.active::after { width: 100%; }
+        .nav-links a:hover, .nav-links a.active {
+            color: var(--theme-color);
+            text-shadow: 0 0 10px var(--theme-color);
+        }
+
+        /* ==========================================
+           4. FLUID MAIN CONTENT & 3D LAYOUT
+           ========================================== */
+        #layout-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            position: relative;
+            z-index: 10;
+        }
+
+        .char-layout {
+            width: 100%;
+            animation: fadeInLayout 0.5s ease-out forwards;
+        }
+
+        @keyframes fadeInLayout {
+            from { opacity: 0; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1.15fr 0.85fr;
+            gap: clamp(25px, 4vw, 55px);
+            padding: 30px calc(40px + var(--safe-right)) 40px calc(var(--roster-width) + 35px + var(--safe-left));
+            max-width: 1650px;
+            margin: 0 auto;
+            width: 100%;
+            align-items: center;
+        }
+
+        .content-area {
+            animation: slideUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .title-group {
+            position: relative;
+            margin-bottom: 25px;
+        }
+
+        .kanji {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            color: rgba(255, 255, 255, 0.08);
+            position: absolute;
+            top: -25px;
+            left: 0;
+            z-index: -1;
+            letter-spacing: 12px;
+            user-select: none;
+            pointer-events: none;
+            font-weight: 700;
+        }
+
+        .quote {
+            font-size: clamp(0.95rem, 1.4vw, 1.25rem);
+            font-style: italic;
+            color: var(--theme-color);
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+            border-left: 3px solid var(--theme-color);
+            padding-left: 14px;
+            line-height: 1.4;
+        }
+
+        .page-title {
+            font-family: 'Oswald', sans-serif;
+            font-size: clamp(2.6rem, 5.5vw, 5.5rem);
+            line-height: 1.05;
+            letter-spacing: clamp(1px, 0.5vw, 3px);
+            text-transform: uppercase;
+            color: #ffffff;
+            text-shadow: 2px 2px 20px rgba(0,0,0,0.8), 0 0 30px var(--theme-color);
+            margin: 4px 0;
+        }
+
+        .page-subtitle {
+            font-family: 'Oswald', sans-serif;
+            font-size: clamp(1.1rem, 1.8vw, 1.6rem);
+            color: var(--text-main);
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            background: linear-gradient(90deg, var(--theme-color), #ffffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Glass Cards */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 18px;
+            margin-top: 20px;
+            transition: opacity 0.4s ease, transform 0.4s ease;
+        }
+
+        .info-card {
+            background: var(--panel-bg);
+            padding: clamp(18px, 2.2vw, 25px);
+            border-radius: 14px;
+            border: 1px solid var(--border-glass);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .info-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 4px; height: 100%;
+            background: var(--theme-color);
+            box-shadow: 0 0 15px var(--theme-color);
+        }
+
+        .info-card h3 {
+            color: var(--theme-color);
+            font-family: 'Oswald', sans-serif;
+            font-size: clamp(1.1rem, 1.5vw, 1.35rem);
+            margin-bottom: 12px;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .info-card p, .info-card ul {
+            font-size: clamp(0.85rem, 1.1vw, 0.95rem);
+            line-height: 1.6;
+            color: var(--text-main);
+        }
+        
+        .info-card ul { list-style: none; }
+        
+        .info-card li {
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        
+        .info-card li span:first-child { color: var(--text-muted); font-weight: 500; }
+
+        /* Full Animated Gallery with Downloads */
+        .full-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+            max-height: 380px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .full-gallery::-webkit-scrollbar { width: 5px; }
+        .full-gallery::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); border-radius: 10px; }
+        .full-gallery::-webkit-scrollbar-thumb { background: var(--theme-color); border-radius: 10px; }
+
+        .gallery-item-wrap {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 4/3;
+            border-radius: 10px;
+            overflow: hidden;
+            opacity: 0;
+            transform: scale(0.85);
+            animation: galleryPop 0.4s forwards cubic-bezier(0.16, 1, 0.3, 1);
+            background: #111;
+        }
+
+        .gallery-item-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.4s ease, border-color 0.3s ease;
+        }
+
+        .gallery-item-wrap img:hover, .gallery-item-wrap img.active {
+            transform: scale(1.08);
+            border-color: var(--theme-color);
+        }
+
+        .download-btn {
+            position: absolute;
+            bottom: 6px;
+            right: 6px;
+            background: rgba(0, 0, 0, 0.85);
+            color: #fff;
+            border: 1px solid var(--border-glass);
+            border-radius: 8px;
+            width: 34px;
+            height: 34px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: background 0.3s ease, transform 0.2s ease, border-color 0.3s ease;
+            z-index: 10;
+        }
+
+        .download-btn:hover {
+            background: var(--theme-color);
+            color: #fff;
+            border-color: var(--theme-color);
+            transform: scale(1.1);
+        }
+
+        @keyframes galleryPop { to { opacity: 1; transform: scale(1); } }
+
+        /* Bottom Gallery Thumbnails */
+        .image-gallery {
+            display: flex;
+            gap: 12px;
+            margin-top: 30px;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 6px;
+            scrollbar-width: thin;
+        }
+
+        .image-gallery img {
+            width: clamp(70px, 9vw, 95px);
+            height: clamp(50px, 6vw, 68px);
+            object-fit: cover;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.3s ease, opacity 0.3s ease, border-color 0.3s ease;
+            opacity: 0.55;
+            flex-shrink: 0;
+        }
+
+        .image-gallery img:hover, .image-gallery img.active {
+            border-color: var(--theme-color);
+            opacity: 1;
+            transform: translateY(-4px);
+            box-shadow: 0 8px 18px var(--theme-color);
+        }
+
+        /* 3D Visual Hero Card */
+        .hero-visual {
+            perspective: 1200px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+
+        .tilt-card {
+            width: 100%;
+            max-width: 440px;
+            aspect-ratio: 3/4.2;
+            position: relative;
+            transform-style: preserve-3d;
+            border-radius: 20px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.9), 0 0 35px rgba(0,0,0,0.5);
+            transition: transform 0.15s ease-out;
+            will-change: transform;
+        }
+
+        .tilt-card img.main-display-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 20px;
+            position: absolute;
+            top: 0; left: 0;
+            border: 1px solid var(--border-glass);
+        }
+
+        .card-glare {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            border-radius: 20px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.12) 0%, transparent 60%);
+            transform: translateZ(35px);
+            pointer-events: none;
+        }
+
+        .card-badge {
+            position: absolute;
+            bottom: -15px; right: -15px;
+            background: var(--theme-dark);
+            border: 2px solid var(--theme-color);
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.6rem;
+            color: var(--theme-color);
+            box-shadow: 0 0 20px var(--theme-color);
+            transform: translateZ(60px);
+        }
+
+        /* ==========================================
+           5. FOOTER
+           ========================================== */
+        footer {
+            text-align: center;
+            padding: 20px 20px calc(20px + var(--safe-bottom)) calc(var(--roster-width) + 20px + var(--safe-left));
+            background: rgba(5, 5, 10, 0.85);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+            z-index: 10;
+        }
+
+        /* ==========================================
+           6. CROSS-DEVICE RESPONSIVE BREAKPOINTS
+           ========================================== */
+        @media (max-width: 1100px) {
+            :root { --roster-width: 70px; }
+            .container { grid-template-columns: 1fr; gap: 35px; padding-top: 20px; }
+            .hero-visual { order: -1; }
+            .tilt-card { max-width: 320px; }
+        }
+
+        @media (max-width: 768px) {
+            :root { --roster-width: 0px; }
+            .roster-menu {
+                left: 50%; top: auto; bottom: calc(10px + var(--safe-bottom));
+                transform: translateX(-50%); flex-direction: row; padding: 10px 16px;
+                border-radius: 35px; max-height: none; width: calc(100% - 30px);
+                max-width: 480px; justify-content: space-between; overflow-x: auto;
+                background: rgba(12, 10, 15, 0.85); box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            }
+            .char-icon { width: 42px; height: 42px; }
+            nav { padding: calc(12px + var(--safe-top)) 15px 12px 15px; flex-direction: column; gap: 10px; }
+            .nav-links { width: 100%; justify-content: flex-start; gap: 15px; }
+            .container { padding: 15px 15px calc(90px + var(--safe-bottom)) 15px; }
+            .tilt-card { max-width: 270px; transform: none !important; }
+            .card-badge { width: 45px; height: 45px; font-size: 1.2rem; bottom: -10px; right: -10px; }
+            footer { padding: 15px 15px calc(85px + var(--safe-bottom)) 15px; }
+        }
+
+        @media (max-width: 380px) {
+            .char-icon { width: 36px; height: 36px; }
+            .info-grid { grid-template-columns: 1fr; }
+            .full-gallery { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 🎥 Cross-Platform Background Video -->
+    <video id="bg-video" autoplay loop muted playsinline webkit-playsinline></video>
+    
+    <div class="bg-overlay" id="bg-overlay"></div>
+
+    <!-- 📱 Character Selector Roster -->
+    <aside class="roster-menu" aria-label="Character Selection">
+        <div class="char-icon active" id="btn-sukuna" data-name="Ryomen Sukuna" onclick="switchCharacter('sukuna')">
+            <img src="photos/sukuna 4.jpg" alt="Sukuna" loading="lazy">
+        </div>
+        <div class="char-icon" id="btn-gojo" data-name="Gojo Satoru" onclick="switchCharacter('gojo')">
+            <img src="photos/gojo 1.jpg" alt="Gojo" loading="lazy">
+        </div>
+        <div class="char-icon" id="btn-toji" data-name="Toji Fushiguro" onclick="switchCharacter('toji')">
+            <img src="photos/t1.jpg" alt="Toji" loading="lazy">
+        </div>
+        <div class="char-icon" id="btn-yuta" data-name="Yuta Okkotsu" onclick="switchCharacter('yuta')">
+            <img src="photos/yuta 1.jpg" alt="Yuta" loading="lazy">
+        </div>
+        <div class="char-icon" id="btn-megumi" data-name="Megumi Fushiguro" onclick="switchCharacter('megumi')">
+            <img src="photos/megumi.jpg" alt="Megumi" loading="lazy">
+        </div>
+        <div class="char-icon" id="btn-yuji" data-name="Yuji Itadori" onclick="switchCharacter('yuji')">
+            <img src="photos/Yuji itadori.jpg" alt="Yuji" loading="lazy">
+        </div>
+        <div class="char-icon" id="btn-geto" data-name="Suguru Geto" onclick="switchCharacter('geto')">
+            <img src="photos/g6.jpg" alt="Geto" loading="lazy">
+        </div>
+        <div class="char-icon" id="btn-mahito" data-name="Mahito" onclick="switchCharacter('mahito')">
+            <img src="photos/mohito 4.jpg" alt="Mahito" loading="lazy">
+        </div>
+    </aside>
+
+    <!-- 🌐 Global Top Navigation -->
+    <nav>
+        <div class="nav-logo" id="nav-logo-element">
+            <i class="fa-solid fa-fire" id="nav-icon"></i> <span id="nav-text">SUKUNA</span>
+        </div>
+        <div class="nav-links" id="dynamic-nav">
+            <!-- Nav links injected via JS -->
+        </div>
+    </nav>
+
+    <!-- ⚡ Dynamic Main Layout Container -->
+    <main id="layout-container">
+        <!-- Injected via JavaScript -->
+    </main>
+
+    <!-- 📄 Footer -->
+    <footer>
+        <p>&copy; 2026 Kushagra. All Rights Reserved. | Jujutsu Kaisen Dynamic Database Archive</p>
+    </footer>
+
+    <script>
+        // ==========================================
+        // 1. SCALABLE CHARACTER DATABASE
+        // ==========================================
+        const characterDB = {
+            sukuna: {
+                themeColor: "#ff0000",
+                logoText: "SUKUNA",
+                logoIcon: "fa-fire",
+                bgVideo: "photos/BG BY CWS.mp4", 
+                kanji: "両面宿儺",
+                navLinks: [
+                    { id: 'home', label: 'Home' },
+                    { id: 'about', label: 'Profile' },
+                    { id: 'energy', label: 'Cursed Energy' },
+                    { id: 'affiliate', label: 'Vessels' },
+                    { id: 'strength', label: 'Domain' },
+                    { id: 'gallery', label: 'Gallery' } 
+                ],
+                galleryImages: [
+                    "photos/sukuna 2.jpg", "photos/sukuna 3.jpg", "photos/sukuna 4.jpg",
+                    "photos/sukuna 5.jpg", "photos/sukuna 6.jpg", "photos/sukuna 7.jpg", "photos/sukuna.jpg"
+                ],
+                sections: {
+                    home: { title: "RYOMEN SUKUNA", subtitle: "The Undisputed King of Curses", quote: "\"Know your place, fool.\"", image: "photos/sukuna 4.jpg",
+                        content: `<div class="info-card"><h3><i class="fa-solid fa-skull"></i> ABOUT HIM</h3><p>Ryomen Sukuna is a mighty cursed spirit known as the undeniable King of Curses. According to legend, during the golden age of jujutsu over 1,000 years ago, Sukuna was a human sorcerer of unmatched power.</p></div>
+                                  <div class="info-card"><h3><i class="fa-solid fa-fire-flame-curved"></i> KEY TRAITS</h3><ul><li><span>Strength</span> <span>Absolute Overlord</span></li><li><span>Nature</span> <span>Sadistic & Arrogant</span></li><li><span>Combat IQ</span> <span>Unmatched</span></li><li><span>Era</span> <span>Heian Period</span></li></ul></div>`
+                    },
+                    about: { title: "PROFILE DATA", subtitle: "The Disgraced One", quote: "\"A hierarchy not based purely on strength is boring.\"", image: "photos/sukuna 2.jpg",
+                        content: `<div class="info-card"><h3><i class="fa-solid fa-address-card"></i> BIOMETRICS</h3><ul><li><span>Full Name</span> <span>Ryomen Sukuna (両面宿儺)</span></li><li><span>Species</span> <span>Incarnated Cursed Object</span></li><li><span>Status</span> <span>Alive (Incarnated)</span></li><li><span>Grade</span> <span>Special Grade</span></li></ul></div>
+                                  <div class="info-card"><h3><i class="fa-solid fa-masks-theater"></i> PERSONALITY</h3><p>Sukuna is selfish, cold-hearted, immoral, and exceptionally sadistic. He rarely cares about consequences and views humans merely as toys to stave off his boredom.</p></div>`
+                    },
+                    energy: { title: "CURSED ENERGY", subtitle: "Immense Power & Efficiency", quote: "\"You dare touch my soul?\"", image: "photos/sukuna 5.jpg",
+                        content: `<div class="info-card"><h3><i class="fa-solid fa-bolt"></i> MASSIVE RESERVES</h3><p>Sukuna possesses immense levels of cursed energy, far surpassing even the strongest modern sorcerers. He can use Reverse Cursed Technique constantly to heal lost limbs.</p></div>
+                                  <div class="info-card"><h3><i class="fa-solid fa-scissors"></i> DISMANTLE & CLEAVE</h3><p>His innate slashing techniques. Dismantle is a standard flying slash, while Cleave adjusts its strength depending on the target's toughness to cut them down in one swoop.</p></div>`
+                    },
+                    affiliate: { title: "VESSELS", subtitle: "Incarnated Curse", quote: "\"Any hierarchy other than strength is worthless.\"", image: "photos/sukuna 6.jpg",
+                        content: `<div class="info-card"><h3><i class="fa-solid fa-user-lock"></i> YUJI ITADORI</h3><p>Sukuna was incarnated when Yuji consumed one of his twenty indestructible fingers. Yuji possessed the unique ability to suppress Sukuna's soul.</p></div>
+                                  <div class="info-card"><h3><i class="fa-solid fa-moon"></i> MEGUMI FUSHIGURO</h3><p>Recognizing the potential of the Ten Shadows Technique, Sukuna orchestrated a plan to forcibly transfer his soul into Megumi, gaining total control.</p></div>`
+                    },
+                    strength: { title: "MALEVOLENT SHRINE", subtitle: "Divine Domain Expansion", quote: "\"Domain Expansion: Malevolent Shrine.\"", image: "photos/sukuna 3.jpg",
+                        content: `<div class="info-card"><h3><i class="fa-solid fa-torii-gate"></i> THE SHRINE</h3><p>Unlike other domains, Malevolent Shrine doesn't create a separate space with a barrier. It manifests his domain directly onto the physical world, which is considered a truly divine technique.</p></div>
+                                  <div class="info-card"><h3><i class="fa-solid fa-fire"></i> ENDLESS SLASHES</h3><p>Within the domain's massive radius, Cleave and Dismantle are relentlessly and automatically applied to anything and everything until the domain drops.</p></div>`
+                    }
+                }
+            },
+            gojo: {
+                themeColor: "#00d2ff",
+                logoText: "GOJO",
+                logoIcon: "fa-infinity",
+                bgVideo: "photos/gojo bg.mp4",
+                kanji: "五条悟",
+                navLinks: [
+                    { id: 'home', label: 'Home' },
+                    { id: 'about', label: 'Profile' },
+                    { id: 'energy', label: 'Cursed Energy' },
+                    { id: 'affiliate', label: 'Connections' },
+                    { id: 'strength', label: 'Domain' },
+                    { id: 'gallery', label: 'Gallery' }
+                ],
+                galleryImages: [
+                    "photos/gojo 1.jpg", "photos/gojo 2.jpg", "photos/gojo 3.jpg",
+                    "photos/gojo 4.jpg", "photos/gojo 5.jpg", "photos/gojo 6.jpg"
+                ],
+                sections: {
+                    home: { title: "SATORU GOJO", subtitle: "The Strongest Sorcerer", quote: "\"Throughout heaven and earth, I alone am the honored one.\"", image: "photos/gojo 1.jpg",
+                        content: `<div class="info-card"><h3><i class="fa-solid fa-bolt"></i> ABOUT HIM</h3><p>Gojo Satoru is a special grade Jujutsu Sorcerer and teacher at Tokyo Jujutsu High. Known as the strongest of the modern era, he carries himself with unmatched confidence.</p></div>
+                                  <div class="info-card"><h3><i class="fa-solid fa-clipboard-user"></i> KEY TRAITS</h3><ul><li><span>Strength</span> <span>Unrivaled / Pinnacle</span></li><li><span>Intelligence</span> <span>Exceptional Battle IQ</span></li><li><span>Mentality</span> <span>Fearless & Confident</span></li></ul></div>`
+                    },
+                    about: { title: "PROFILE DATA", subtitle: "Rebel of the Gojo Clan", quote: "\"I'll do whatever I want. And if anyone gets in my way, I'll just take them down.\"", image: "photos/gojo 2.jpg",
+                        content: `<div class="info-card"><h3><i class="fa-solid fa-address-card"></i> BIOMETRICS</h3><ul><li><span>Full Name</span> <span>Gojo Satoru (五条 悟)</span></li><li><span>Birthdate</span> <span>December 7</span></li><li><span>Height</span> <span>190 cm (6'3")</span></li></ul></div>
+                                  <div class="info-card"><h3><i class="fa-solid fa-masks-theater"></i> PERSONALITY</h3><p>Confident to the point of arrogance, backed entirely by his strength. Deep down, he values freedom and believes in nurturing strong, independent sorcerers.</p></div>`
+                    },
+                    energy: { title: "LIMITLESS", subtitle: "Innate Cursed Technique", quote: "\"Don't worry, I'm the strongest.\"", image: "photos/gojo 3.jpg",
+                        content: `<div class="info-card"><h3><i class="fa-solid fa-eye"></i> THE SIX EYES</h3><p>A rare ocular jujutsu inherited within the Gojo family. It grants Satoru extraordinary perception and perfect cursed energy efficiency.</p></div>
+                                  <div class="info-card"><h3><i class="fa-solid fa-infinity"></i> INFINITY (MUGEN)</h3><p>The neutral form of the Limitless. Anything approaching Gojo slows down infinitely, meaning no attack can ever truly reach him.</p></div>`
+                    },
+                    affiliate: { title: "CONNECTIONS", subtitle: "Nurturing the Next Generation", quote: "\"I'm searching for strong, clever allies. I need them to shake up this stagnant world.\"", image: "photos/gojo 4.jpg",
+                        content: `<div class="info-card"><h3><i class="fa-solid fa-graduation-cap"></i> HIS STUDENTS</h3><p>Gojo acts as a mentor to Yuji Itadori, Megumi Fushiguro, and Nobara Kugisaki. He aims to raise allies strong enough to stand beside him.</p></div>
+                                  <div class="info-card"><h3><i class="fa-solid fa-user-group"></i> THE ONE AND ONLY</h3><p>Suguru Geto was Gojo's closest friend and fellow prodigy during their school years. Their bond left a lasting impact on Gojo's soul.</p></div>`
+                    },
+                    strength: { title: "UNLIMITED VOID", subtitle: "Domain Expansion", quote: "\"You cryin'? Don't worry, I'll win.\"", image: "photos/gojo 5.jpg",
+                        content: `<div class="info-card"><h3><i class="fa-solid fa-brain"></i> THE DOMAIN</h3><p>Gojo's Domain Expansion traps targets inside the Limitless itself. It overwhelms the victim's brain with infinite information, forcing them into a catatonic state.</p></div>
+                                  <div class="info-card"><h3><i class="fa-solid fa-meteor"></i> HOLLOW PURPLE</h3><p>The collision of Limitless Blue and Limitless Red. Creates an imaginary mass that erases everything in its path instantly.</p></div>`
+                    }
+                }
+            },
+            toji: {
+                themeColor: "#94a3b8", 
+                logoText: "TOJI",
+                logoIcon: "fa-crosshairs", 
+                bgVideo: "photos/toji bg.mp4",
+                kanji: "伏黒甚爾",
+                navLinks: [
+                    { id: 'home', label: 'Home' },
+                    { id: 'about', label: 'Profile' },
+                    { id: 'energy', label: 'Heavenly Restriction' },
+                    { id: 'affiliate', label: 'Affiliations' },
+                    { id: 'strength', label: 'Arsenal' },
+                    { id: 'gallery', label: 'Gallery' }
+                ],
+                galleryImages: [
+                    "photos/t1.jpg", "photos/t2.jpg", "photos/t3.jpg",
+                    "photos/t4.jpg", "photos/t5.jpg", "photos/t6.jpg"
+                ],
+                sections: {
+                    home: { title: "TOJI FUSHIGURO", subtitle: "The Sorcerer Killer", quote: "\"I left it all behind.\"", image: "photos/t2.jpg",
+                        content: `<div class="info-card"><h3><i class="fa-solid fa-user-ninja"></i> ABOUT HIM</h3><p>Toji Fushiguro, born Toji Zenin, is a former member of the Zenin clan and a notorious assassin known as the Sorcerer Killer.</p></div>
+                                  <div class="info-card"><h3><i class="fa-solid fa-clipboard-user"></i> KEY TRAITS</h3><ul><li><span>Strength</span> <span>Peak Human Condition</span></li><li><span>Specialty</span> <span>Weapon Mastery & Stealth</span></li><li><span>Mentality</span> <span>Pragmatic & Ruthless</span></li></ul></div>`
+                    },
+                    about: { title: "PROFILE DATA", subtitle: "Outcast of the Zenin Clan", quote: "\"I'm just a monkey who can't even use jujutsu.\"", image: "photos/t1.jpg",
+                        content: `<div class="info-card"><h3><i class="fa-solid fa-address-card"></i> BIOMETRICS</h3><ul><li><span>Full Name</span> <span>Toji Fushiguro (伏黒 甚爾)</span></li><li><span>Alias</span> <span>Sorcerer Killer</span></li><li><span>Status</span> <span>Deceased</span></li></ul></div>
+                                  <div class="info-card"><h3><i class="fa-solid fa-masks-theater"></i> PERSONALITY</h3><p>Toji is cool, confident, and highly calculating. Ostracized by the Zenin clan for his lack of cursed energy, he became a jaded mercenary.</p></div>`
+                    },
+                    energy: { title: "HEAVENLY RESTRICTION", subtitle: "Zero Cursed Energy", quote: "\"To deceive a sorcerer, you must first deceive their senses.\"", image: "photos/t5.jpg",
+                        content: `<div class="info-card"><h3><i class="fa-solid fa-battery-empty"></i> ABSOLUTE ZERO</h3><p>Toji was born with a Heavenly Restriction that completely erased his cursed energy. In exchange, his physical body became pure superhuman perfection.</p></div>
+                                  <div class="info-card"><h3><i class="fa-solid fa-eye"></i> HEIGHTENED SENSES</h3><p>His five senses reached their absolute peak, allowing him to perceive and interact with curses naturally without cursed energy.</p></div>`
+                    },
+                    affiliate: { title: "AFFILIATIONS", subtitle: "Mercenary Life", quote: "\"I don't work for free.\"", image: "photos/t4.jpg",
+                        content: `<div class="info-card"><h3><i class="fa-solid fa-building-user"></i> TIME VESSEL ASSOCIATION</h3><p>Contracted by the Time Vessel Association to assassinate Riko Amanai, putting him directly in conflict with Satoru Gojo.</p></div>
+                                  <div class="info-card"><h3><i class="fa-solid fa-child"></i> MEGUMI'S FATHER</h3><p>The biological father of Megumi Fushiguro. In his final moments, he protected Megumi from being sold to the Zenin clan.</p></div>`
+                    },
+                    strength: { title: "ARSENAL", subtitle: "Cursed Tools", quote: "\"Let's see how much you're worth.\"", image: "photos/t6.jpg",
+                        content: `<div class="info-card"><h3><i class="fa-solid fa-khanda"></i> SPECIAL GRADE TOOLS</h3><p>He relies heavily on cursed tools, including the Split Soul Katana, which cuts directly at a target's soul, ignoring physical durability.</p></div>
+                                  <div class="info-card"><h3><i class="fa-solid fa-shield-halved"></i> INVERTED SPEAR</h3><p>A weapon that forces the nullification of any cursed technique it touches, allowing him to bypass Gojo's Infinity.</p></div>`
+                    }
+                }
+            },
+            yuta: {
+                themeColor: "#a855f7", 
+                logoText: "YUTA",
+                logoIcon: "fa-ring", 
+                bgVideo: "photos/yuta bg.mp4",
+                kanji: "乙骨憂太",
+                navLinks: [
+                    { id: 'home', label: 'Home' },
+                    { id: 'about', label: 'Profile' },
+                    { id: 'energy', label: 'Cursed Energy' },
+                    { id: 'affiliate', label: 'Connections' },
+                    { id: 'strength', label: 'Domain' },
+                    { id: 'gallery', label: 'Gallery' }
+                ],
+                galleryImages: [
+                    "photos/yuta 1.jpg", "photos/yuta 2.jpg", "photos/yuta 3.jpg", "photos/yuta 4.jpg",
+                    "photos/yuta 5.jpg", "photos/yuta 6.jpg", "photos/yuta 7.jpg", "photos/Yuta.jpg"
+                ],
+                sections: {
+                    home: { title: "YUTA OKKOTSU", subtitle: "Special Grade Sorcerer", quote: "\"I will kill curses, so I can protect the people I love.\"", image: "photos/yuta 1.jpg",
+                        content: `<div class="info-card"><h3><i class="fa-solid fa-bolt"></i> ABOUT HIM</h3><p>Yuta Okkotsu is a Special Grade Jujutsu Sorcerer and student at Tokyo Jujutsu High, originally haunted by the special grade spirit Rika.</p></div>
+                                  <div class="info-card"><h3><i class="fa-solid fa-clipboard-user"></i> KEY TRAITS</h3><ul><li><span>Strength</span> <span>Limitless Potential</span></li><li><span>Technique</span> <span>Copy / Rika</span></li><li><span>Mentality</span> <span>Fiercely Protective</span></li></ul></div>`
+                    },
+                    about: { title: "PROFILE DATA", subtitle: "The Cursed Child", quote: "\"I just want to have a connection with someone.\"", image: "photos/Yuta.jpg",
+                        content: `<div class="info-card"><h3><i class="fa-solid fa-address-card"></i> BIOMETRICS</h3><ul><li><span>Full Name</span> <span>Yuta Okkotsu (乙骨 憂太)</span></li><li><span>Birthdate</span> <span>March 7</span></li><li><span>Grade</span> <span>Special Grade</span></li></ul></div>
+                                  <div class="info-card"><h3><i class="fa-solid fa-masks-theater"></i> PERSONALITY</h3><p>Initially timid, Yuta has grown into a highly determined and compassionate sorcerer who will fight relentlessly to protect his friends.</p></div>`
+                    },
+                    energy: { title: "CURSED ENERGY", subtitle: "Boundless Reserves", quote: "\"Come, Rika.\"", image: "photos/yuta 5.jpg",
+                        content: `<div class="info-card"><h3><i class="fa-solid fa-battery-full"></i> IMMENSE RESERVES</h3><p>Yuta possesses more cursed energy than even Satoru Gojo, allowing him to constantly reinforce his body with Reverse Cursed Technique.</p></div>
+                                  <div class="info-card"><h3><i class="fa-solid fa-clone"></i> COPY TECHNIQUE</h3><p>While fully connected to Rika, Yuta can unconditionally copy and utilize the innate cursed techniques of other sorcerers.</p></div>`
+                    },
+                    affiliate: { title: "CONNECTIONS", subtitle: "Tokyo Jujutsu High", quote: "\"They are my friends.\"", image: "photos/yuta 4.jpg",
+                        content: `<div class="info-card"><h3><i class="fa-solid fa-user-group"></i> SECOND YEARS</h3><p>Formed deep, life-saving bonds with his classmates Maki Zenin, Toge Inumaki, and Panda.</p></div>
+                                  <div class="info-card"><h3><i class="fa-solid fa-graduation-cap"></i> SATORU GOJO</h3><p>Gojo prevented Yuta's execution by higher-ups and took him in as a student to teach him control over his power.</p></div>`
+                    },
+                    strength: { title: "AUTHENTIC MUTUAL LOVE", subtitle: "Domain Expansion", quote: "\"How rude. It's pure love.\"", image: "photos/yuta 2.jpg",
+                        content: `<div class="info-card"><h3><i class="fa-solid fa-khanda"></i> KATANA MASTERY</h3><p>Yuta channels Rika's overwhelming energy into a katana, becoming an exceptionally skilled swordsman in combat.</p></div>
+                                  <div class="info-card"><h3><i class="fa-solid fa-heart"></i> DOMAIN EXPANSION</h3><p>His Domain, "Authentic Mutual Love," fills the area with katanas imbued with copied techniques for endless barrages.</p></div>`
+                    }
+                }
+            },
+            megumi: {
+                themeColor: "#10b981", 
+                logoText: "MEGUMI",
+                logoIcon: "fa-dog",
+                bgVideo: "photos/megumi bg.mp4",
+                kanji: "伏黒恵",
+                navLinks: [
+                    { id: 'home', label: 'Home' },
+                    { id: 'about', label: 'Profile' },
+                    { id: 'energy', label: 'Ten Shadows' },
+                    { id: 'affiliate', label: 'Allies' },
+                    { id: 'strength', label: 'Domain' },
+                    { id: 'gallery', label: 'Gallery' } 
+                ],
+                galleryImages: [
+                    "photos/megumi.jpg", "photos/m1.jpg", "photos/m2.jpg",
+                    "photos/m3.jpg", "photos/m4.jpg", "photos/m5.jpg", "photos/m6.jpg"
+                ],
+                sections: {
+                    home: { title: "MEGUMI FUSHIGURO", subtitle: "Grade 2 Jujutsu Sorcerer", quote: "\"I'll save people who I think deserve to be saved.\"", image: "photos/megumi.jpg",
+                        content: `<div class="info-card"><h3><i class="fa-solid fa-bolt"></i> ABOUT HIM</h3><p>Megumi Fushiguro is a student at Tokyo Jujutsu High and a descendant of the Zenin family with a strong sense of justice.</p></div>
+                                  <div class="info-card"><h3><i class="fa-solid fa-clipboard-user"></i> KEY TRAITS</h3><ul><li><span>Strength</span> <span>High Tactical Intellect</span></li><li><span>Technique</span> <span>Ten Shadows</span></li><li><span>Mentality</span> <span>Calm & Calculating</span></li></ul></div>`
+                    },
+                    about: { title: "PROFILE DATA", subtitle: "Zenin Bloodline", quote: "\"I have no intention of risking my life to save someone I have no intention of saving.\"", image: "photos/m3.jpg",
+                        content: `<div class="info-card"><h3><i class="fa-solid fa-address-card"></i> BIOMETRICS</h3><ul><li><span>Full Name</span> <span>Megumi Fushiguro (伏黒 恵)</span></li><li><span>Birthdate</span> <span>December 22</span></li><li><span>Height</span> <span>175 cm (5'9")</span></li></ul></div>
+                                  <div class="info-card"><h3><i class="fa-solid fa-masks-theater"></i> PERSONALITY</h3><p>Stoic and aloof on the outside, Megumi harbors a deep desire to ensure that good-hearted people get to live fair lives.</p></div>`
+                    },
+                    energy: { title: "TEN SHADOWS", subtitle: "Inherited Technique", quote: "\"With this treasure, I summon...\"", image: "photos/m4.jpg",
+                        content: `<div class="info-card"><h3><i class="fa-solid fa-paw"></i> SHIKIGAMI</h3><p>An inherited technique of the Zenin clan that summons ten different shikigami using shadows as an intermediary medium.</p></div>
+                                  <div class="info-card"><h3><i class="fa-solid fa-moon"></i> SHADOW MANIPULATION</h3><p>Megumi can hide himself and store weapons in shadows, making him versatile in combat and tactical support.</p></div>`
+                    },
+                    affiliate: { title: "CONNECTIONS", subtitle: "Tokyo Jujutsu High", quote: "\"Start by saving me, Itadori.\"", image: "photos/m5.jpg",
+                        content: `<div class="info-card"><h3><i class="fa-solid fa-user-group"></i> COMRADES</h3><p>A loyal companion to Yuji Itadori and Nobara Kugisaki, acting as the tactical anchor of the first-year trio.</p></div>
+                                  <div class="info-card"><h3><i class="fa-solid fa-graduation-cap"></i> MENTOR</h3><p>Satoru Gojo took Megumi in at a young age, preventing him from being sold to the Zenin clan and mentoring his growth.</p></div>`
+                    },
+                    strength: { title: "CHIMERA SHADOW GARDEN", subtitle: "Domain Expansion", quote: "\"Domain Expansion!\"", image: "photos/m6.jpg",
+                        content: `<div class="info-card"><h3><i class="fa-solid fa-water"></i> INCOMPLETE DOMAIN</h3><p>Floods the surrounding area with thick shadow fluid, granting Megumi freedom to spawn endless shikigami.</p></div>
+                                  <div class="info-card"><h3><i class="fa-solid fa-clone"></i> SWARM TACTICS</h3><p>Within his domain, Megumi can produce shadow clones of himself to overwhelm and confuse opponents.</p></div>`
+                    }
+                }
+            },
+            yuji: {
+                themeColor: "#f97316", 
+                logoText: "YUJI",
+                logoIcon: "fa-hand-fist",
+                bgVideo: "photos/yuji bg.mp4",
+                kanji: "虎杖悠仁",
+                navLinks: [
+                    { id: 'home', label: 'Home' },
+                    { id: 'about', label: 'Profile' },
+                    { id: 'energy', label: 'Cursed Energy' },
+                    { id: 'affiliate', label: 'Allies' },
+                    { id: 'strength', label: 'Strength' },
+                    { id: 'gallery', label: 'Gallery' } 
+                ],
+                galleryImages: [
+                    "photos/Yuji itadori.jpg", "photos/y1.jpg", "photos/y2.jpg",
+                    "photos/y3.jpg", "photos/y4.jpg", "photos/y5.jpg", "photos/y6.jpg"
+                ],
+                sections: {
+                    home: { title: "YUJI ITADORI", subtitle: "The Tiger of West High", quote: "\"I don't want to regret the way I lived.\"", image: "photos/Yuji itadori.jpg",
+                        content: `<div class="info-card"><h3><i class="fa-solid fa-bolt"></i> ABOUT HIM</h3><p>Yuji Itadori is the main protagonist of Jujutsu Kaisen. He became a sorcerer after swallowing Sukuna's finger to save his friends.</p></div>
+                                  <div class="info-card"><h3><i class="fa-solid fa-clipboard-user"></i> KEY TRAITS</h3><ul><li><span>Strength</span> <span>Superhuman Physiology</span></li><li><span>Nature</span> <span>Selfless & Caring</span></li><li><span>Willpower</span> <span>Unbreakable</span></li></ul></div>`
+                    },
+                    about: { title: "PROFILE DATA", subtitle: "Vessel of Sukuna", quote: "\"I want to help people have a proper death.\"", image: "photos/y1.jpg",
+                        content: `<div class="info-card"><h3><i class="fa-solid fa-address-card"></i> BIOMETRICS</h3><ul><li><span>Full Name</span> <span>Yuji Itadori (虎杖 悠仁)</span></li><li><span>Birthdate</span> <span>March 20</span></li><li><span>Height</span> <span>173 cm (5'8")</span></li></ul></div>
+                                  <div class="info-card"><h3><i class="fa-solid fa-masks-theater"></i> PERSONALITY</h3><p>Energetic, selfless, and empathetic. He believes strongly in the value of human life and will risk everything to protect others.</p></div>`
+                    },
+                    energy: { title: "DIVERGENT FIST", subtitle: "Raw Output", quote: "\"I'm going to get stronger.\"", image: "photos/y2.jpg",
+                        content: `<div class="info-card"><h3><i class="fa-solid fa-hand-fist"></i> KEITEIKEN</h3><p>Due to superhuman speed, his cursed energy initially lagged behind his strikes, resulting in a potent double-impact punch.</p></div>
+                                  <div class="info-card"><h3><i class="fa-solid fa-bolt-lightning"></i> BLACK FLASH</h3><p>A prodigy at landing Black Flash, a distortion in space that amplifies physical strikes to the power of 2.5.</p></div>`
+                    },
+                    affiliate: { title: "CONNECTIONS", subtitle: "Tokyo Jujutsu High", quote: "\"We are Jujutsu Sorcerers.\"", image: "photos/y4.jpg",
+                        content: `<div class="info-card"><h3><i class="fa-solid fa-user-group"></i> COMRADES</h3><p>Deeply loyal to Megumi, Nobara, and Aoi Todo, who guided his growth in combat.</p></div>
+                                  <div class="info-card"><h3><i class="fa-solid fa-graduation-cap"></i> MENTORS</h3><p>Mentored by Satoru Gojo and Kento Nanami, shaping him into a disciplined and powerful sorcerer.</p></div>`
+                    },
+                    strength: { title: "COMBAT PROWESS", subtitle: "Unmatched Physicality", quote: "\"I'll leave the rest to you.\"", image: "photos/y5.jpg",
+                        content: `<div class="info-card"><h3><i class="fa-solid fa-dumbbell"></i> SUPERHUMAN MIGHT</h3><p>Even without cursed energy, Yuji possesses monstrous natural strength, agility, speed, and durability.</p></div>
+                                  <div class="info-card"><h3><i class="fa-solid fa-shield-halved"></i> POISON IMMUNITY</h3><p>As the vessel for the King of Curses, Yuji possesses total natural resistance to all lethal poisons.</p></div>`
+                    }
+                }
+            },
+            geto: {
+                themeColor: "#f59e0b", 
+                logoText: "GETO",
+                logoIcon: "fa-yin-yang",
+                bgVideo: "photos/geto bg.mp4",
+                kanji: "夏油傑",
+                navLinks: [
+                    { id: 'home', label: 'Home' },
+                    { id: 'about', label: 'Profile' },
+                    { id: 'energy', label: 'Cursed Energy' },
+                    { id: 'affiliate', label: 'Ideology' },
+                    { id: 'strength', label: 'Arsenal' },
+                    { id: 'gallery', label: 'Gallery' }
+                ],
+                galleryImages: [
+                    "photos/g1.jpg", "photos/g2.jpg", "photos/g3.jpg",
+                    "photos/g4.jpg", "photos/g5.jpg", "photos/g6.jpg"
+                ],
+                sections: {
+                    home: { title: "SUGURU GETO", subtitle: "Special Grade Curse User", quote: "\"Are you the strongest because you're Satoru Gojo?\"", image: "photos/g1.jpg",
+                        content: `<div class="info-card"><h3><i class="fa-solid fa-bolt"></i> ABOUT HIM</h3><p>Suguru Geto was a Special Grade Jujutsu Sorcerer and former classmate of Satoru Gojo. He became a curse user with the ultimate goal of exterminating all non-sorcerers.</p></div>
+                                  <div class="info-card"><h3><i class="fa-solid fa-clipboard-user"></i> KEY TRAITS</h3><ul><li><span>Strength</span> <span>Massive Curse Army</span></li><li><span>Intelligence</span> <span>Cult Leader</span></li><li><span>Mentality</span> <span>Radical Extremist</span></li></ul></div>`
+                    },
+                    about: { title: "PROFILE DATA", subtitle: "The Fallen One", quote: "\"I just couldn't wear a fake smile anymore.\"", image: "photos/g2.jpg",
+                        content: `<div class="info-card"><h3><i class="fa-solid fa-address-card"></i> BIOMETRICS</h3><ul><li><span>Full Name</span> <span>Suguru Geto (夏油 傑)</span></li><li><span>Status</span> <span>Deceased / Possessed</span></li><li><span>Grade</span> <span>Special Grade</span></li></ul></div>
+                                  <div class="info-card"><h3><i class="fa-solid fa-masks-theater"></i> PERSONALITY</h3><p>Once a deeply moral and kind student, the horrors of protecting ungrateful humans broke him, leading him to view non-sorcerers as evolutionary dead ends, or 'monkeys'.</p></div>`
+                    },
+                    energy: { title: "CURSE MANIPULATION", subtitle: "Consuming the Darkness", quote: "\"Taste like a rag used to wipe up vomit.\"", image: "photos/g3.jpg",
+                        content: `<div class="info-card"><h3><i class="fa-solid fa-ghost"></i> ABSORPTION</h3><p>His innate technique allows him to capture and control vagrant cursed spirits by ingesting them. He can summon and control thousands simultaneously.</p></div>
+                                  <div class="info-card"><h3><i class="fa-solid fa-infinity"></i> TACTICAL MASTERY</h3><p>Using his vast collection of curses, Geto can spy, shield himself, or launch massive area-of-effect attacks using the combined power of his spirits.</p></div>`
+                    },
+                    affiliate: { title: "IDEOLOGY", subtitle: "Star Religious Group", quote: "\"Monkeys.\"", image: "photos/g4.jpg",
+                        content: `<div class="info-card"><h3><i class="fa-solid fa-people-group"></i> CULT LEADER</h3><p>Geto took over the Star Religious Group and used it as a front to gather money and curses from wealthy non-sorcerers.</p></div>
+                                  <div class="info-card"><h3><i class="fa-solid fa-user-group"></i> HIS 'FAMILY'</h3><p>Despite his hatred for normal humans, Geto genuinely loved and cared for his fellow curse users, viewing them as his true family.</p></div>`
+                    },
+                    strength: { title: "MAXIMUM UZUMAKI", subtitle: "Supreme Art", quote: "\"Let's curse each other to our hearts' content!\"", image: "photos/g5.jpg",
+                        content: `<div class="info-card"><h3><i class="fa-solid fa-hurricane"></i> UZUMAKI</h3><p>Geto's Maximum Technique combines a vast number of collected cursed spirits into one hyper-dense attack of pure cursed energy.</p></div>
+                                  <div class="info-card"><h3><i class="fa-solid fa-khanda"></i> PLAYFUL CLOUD</h3><p>A master in hand-to-hand combat, Geto effectively wields the Special Grade cursed tool Playful Cloud, overwhelming even seasoned close-quarters fighters.</p></div>`
+                    }
+                }
+            },
+            mahito: {
+                themeColor: "#00f0ff",
+                logoText: "MAHITO",
+                logoIcon: "fa-ghost",
+                bgVideo: "photos/mohito bg.mp4", 
+                kanji: "真人",
+                navLinks: [
+                    { id: 'home', label: 'Home' },
+                    { id: 'about', label: 'Profile' },
+                    { id: 'energy', label: 'Cursed Energy' },
+                    { id: 'affiliate', label: 'Connections' },
+                    { id: 'strength', label: 'Domain' },
+                    { id: 'gallery', label: 'Gallery' } 
+                ],
+                galleryImages: [
+                    "photos/mohito 1.jpg", "photos/mohito 2.jpg", "photos/mohito 3.jpg",
+                    "photos/mohito 4.jpg", "photos/mohito 5.jpg"
+                ],
+                sections: {
+                    home: { title: "MAHITO", subtitle: "Special Grade Cursed Spirit", quote: "\"I was born from the hatred of humans.\"", image: "photos/mohito 4.jpg",
+                        content: `<div class="info-card"><h3><i class="fa-solid fa-bolt"></i> ABOUT HIM</h3><p>Mahito is a sadistic, playful cursed spirit born from humans' mutual hatred and negative emotions toward one another.</p></div>
+                                  <div class="info-card"><h3><i class="fa-solid fa-clipboard-user"></i> KEY TRAITS</h3><ul><li><span>Strength</span> <span>Lethal Soul Touch</span></li><li><span>Nature</span> <span>Sadistic & Immature</span></li><li><span>Resilience</span> <span>Immune to Normal Physical Damage</span></li></ul></div>`
+                    },
+                    about: { title: "LIFE STORY", subtitle: "The Manifestation of Hatred", quote: "\"You humans have so many rules. It's boring.\"", image: "photos/mohito 3.jpg",
+                        content: `<div class="info-card"><h3><i class="fa-solid fa-address-card"></i> BIOMETRICS</h3><ul><li><span>Alias</span> <span>Patchface</span></li><li><span>Species</span> <span>Cursed Spirit</span></li><li><span>Grade</span> <span>Special Grade</span></li></ul></div>
+                                  <div class="info-card"><h3><i class="fa-solid fa-masks-theater"></i> PERSONALITY</h3><p>Lacks all empathy for human life and seeks the total eradication of humanity to let curses rule the world.</p></div>`
+                    },
+                    energy: { title: "IDLE TRANSFIGURATION", subtitle: "Soul Manipulation", quote: "\"The soul comes before the body.\"", image: "photos/mohito 2.jpg",
+                        content: `<div class="info-card"><h3><i class="fa-solid fa-hand-sparkles"></i> THE TECHNIQUE</h3><p>Allows him to reshape the shape of the soul, disfiguring the victim's body permanently and instantly.</p></div>
+                                  <div class="info-card"><h3><i class="fa-solid fa-shield-halved"></i> TRUE HEALING</h3><p>As long as his soul is intact, Mahito can regenerate from any physical damage without effort.</p></div>`
+                    },
+                    affiliate: { title: "DISASTER CURSES", subtitle: "Pseudo-Geto's Faction", quote: "\"Let's just kill them all!\"", image: "photos/mohito 5.jpg",
+                        content: `<div class="info-card"><h3><i class="fa-solid fa-users"></i> ALLIANCE</h3><p>Leader of the Disaster Curses alongside Jogo, Hanami, and Dagon, working with Pseudo-Geto.</p></div>
+                                  <div class="info-card"><h3><i class="fa-solid fa-handshake-angle"></i> THE PLAN</h3><p>Orchestrated the Shibuya Incident to seal Satoru Gojo and revive Ryomen Sukuna.</p></div>`
+                    },
+                    strength: { title: "DOMAIN EXPANSION", subtitle: "Self-Embodiment of Perfection", quote: "\"Domain Expansion.\"", image: "photos/mohito 1.jpg",
+                        content: `<div class="info-card"><h3><i class="fa-solid fa-hands"></i> THE DOMAIN</h3><p>Automatically connects Mahito's palm directly to the soul of anyone trapped inside the barrier.</p></div>
+                                  <div class="info-card"><h3><i class="fa-solid fa-skull-crossbones"></i> INSTANT TRANSMUTATION</h3><p>Allows instant soul manipulation and execution without requiring physical touch.</p></div>`
+                    }
+                }
+            }
+        };
+
+        let activeChar = 'sukuna'; 
+
+        // ==========================================
+        // 2. VIDEO & MEDIA CONTROLLERS
+        // ==========================================
+        function forceHideVideo() {
+            const bgVideo = document.getElementById('bg-video');
+            bgVideo.pause();
+            bgVideo.style.opacity = '0';
+            bgVideo.style.display = 'none';
+            document.body.classList.remove('video-mode');
+        }
+
+        function forceShowVideo(src) {
+            const bgVideo = document.getElementById('bg-video');
+            const encodedSrc = encodeURI(src);
+            
+            if (!bgVideo.getAttribute('src') || !bgVideo.getAttribute('src').includes(encodedSrc)) {
+                bgVideo.setAttribute('src', encodedSrc);
+            }
+            
+            bgVideo.style.display = 'block';
+            document.body.classList.add('video-mode');
+            
+            setTimeout(() => { 
+                bgVideo.style.opacity = '1'; 
+            }, 50);
+            
+            const playPromise = bgVideo.play();
+            if (playPromise !== undefined) {
+                playPromise.catch(e => {
+                    console.log("Device autoplay constraint handled:", e);
+                });
+            }
+            document.body.style.backgroundImage = 'none';
+        }
+
+        // Cross-Device Safe Image Downloader
+        async function downloadImageFile(url) {
+            try {
+                const filename = url.substring(url.lastIndexOf('/') + 1);
+                const response = await fetch(url);
+                const blob = await response.blob();
+                const blobUrl = window.URL.createObjectURL(blob);
+                
+                const link = document.createElement('a');
+                link.href = blobUrl;
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(blobUrl);
+            } catch (err) {
+                const fallbackLink = document.createElement('a');
+                fallbackLink.href = url;
+                fallbackLink.target = "_blank";
+                fallbackLink.download = url.substring(url.lastIndexOf('/') + 1);
+                document.body.appendChild(fallbackLink);
+                fallbackLink.click();
+                document.body.removeChild(fallbackLink);
+            }
+        }
+
+        // ==========================================
+        // 3. CHARACTER SWITCHING ENGINE
+        // ==========================================
+        function switchCharacter(charId) {
+            activeChar = charId;
+            const data = characterDB[charId];
+
+            // Update Roster UI
+            document.querySelectorAll('.char-icon').forEach(icon => icon.classList.remove('active'));
+            const activeIcon = document.getElementById(`btn-${charId}`);
+            if (activeIcon) activeIcon.classList.add('active');
+
+            // Inject Responsive Layout Structure
+            const layoutContainer = document.getElementById('layout-container');
+            layoutContainer.innerHTML = `
+                <div id="layout-${charId}" class="char-layout active">
+                    <div class="container">
+                        <div class="content-area">
+                            <div class="title-group">
+                                <div class="kanji">${data.kanji || ""}</div>
+                                <div class="quote page-quote"></div>
+                                <h1 class="page-title"></h1>
+                                <div class="subtitle page-subtitle"></div>
+                            </div>
+                            <div class="info-grid page-content">
+                                <!-- Injected dynamically -->
+                            </div>
+                            <div class="image-gallery" id="thumb-gallery">
+                                <!-- Thumbnails injected dynamically -->
+                            </div>
+                        </div>
+                        <div class="hero-visual tilt-wrapper">
+                            <div class="tilt-card">
+                                <img src="" class="main-display-img" alt="Character Render" loading="eager">
+                                <div class="card-glare"></div>
+                                <div class="card-badge"><i class="fa-solid ${data.logoIcon}"></i></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Update Global Theme Variables
+            document.documentElement.style.setProperty('--theme-color', data.themeColor);
+            document.getElementById('nav-icon').className = `fa-solid ${data.logoIcon}`;
+            document.getElementById('nav-text').innerText = data.logoText;
+
+            // Strict Background Video Management
+            if (data.bgVideo) {
+                forceShowVideo(data.bgVideo);
+            } else {
+                forceHideVideo();
+            }
+
+            // Rebuild Navigation Links
+            const navContainer = document.getElementById('dynamic-nav');
+            navContainer.innerHTML = ''; 
+            data.navLinks.forEach(link => {
+                const a = document.createElement('a');
+                a.innerText = link.label;
+                a.dataset.target = link.id;
+                a.onclick = () => loadContent(link.id);
+                navContainer.appendChild(a);
+            });
+
+            // Rebuild Bottom Thumbnail Bar
+            const thumbGallery = document.getElementById('thumb-gallery');
+            if (thumbGallery && data.galleryImages) {
+                thumbGallery.innerHTML = '';
+                data.galleryImages.forEach((imgSrc, idx) => {
+                    const img = document.createElement('img');
+                    img.src = imgSrc;
+                    img.alt = `${data.logoText} Thumbnail ${idx + 1}`;
+                    img.loading = "lazy";
+                    img.onclick = function() { changeImage(imgSrc, this); };
+                    thumbGallery.appendChild(img);
+                });
+            }
+
+            // Load Default Section
+            loadContent('home');
+        }
+
+        // ==========================================
+        // 4. CONTENT & GALLERY INJECTION
+        // ==========================================
+        function loadContent(sectionId) {
+            const charData = characterDB[activeChar];
+            const layout = document.getElementById(`layout-${activeChar}`);
+            
+            // Update Navigation State
+            document.querySelectorAll('#dynamic-nav a').forEach(link => {
+                link.classList.remove('active');
+                if(link.dataset.target === sectionId) link.classList.add('active');
+            });
+
+            // Toggle bottom thumbnail bar visibility on full gallery view
+            const thumbGallery = layout.querySelector('.image-gallery');
+            if (thumbGallery) {
+                thumbGallery.style.display = (sectionId === 'gallery') ? 'none' : 'flex';
+            }
+
+            const contentBox = layout.querySelector('.page-content');
+            contentBox.style.opacity = '0';
+            contentBox.style.transform = 'translateY(15px)';
+
+            setTimeout(() => {
+                if (sectionId === 'gallery') {
+                    contentBox.style.display = 'block';
+                    
+                    // Build Full Animated Gallery with Downloads
+                    let galleryHTML = '<div class="full-gallery" style="grid-column: span 2;">';
+                    charData.galleryImages.forEach(imgSrc => {
+                        galleryHTML += `
+                            <div class="gallery-item-wrap">
+                                <img src="${imgSrc}" alt="Gallery item" loading="lazy" onclick="changeImage('${imgSrc}', this)">
+                                <button type="button" class="download-btn" title="Download Image" onclick="event.stopPropagation(); downloadImageFile('${imgSrc}')">
+                                    <i class="fa-solid fa-download"></i>
+                                </button>
+                            </div>
+                        `;
+                    });
+                    galleryHTML += '</div>';
+
+                    layout.querySelector('.page-title').innerText = "GALLERY";
+                    layout.querySelector('.page-subtitle').innerText = "Visual Archives & Downloads";
+                    layout.querySelector('.page-quote').innerText = "\"Download full-resolution archives.\"";
+                    contentBox.innerHTML = galleryHTML;
+
+                    changeImage(charData.galleryImages[0]);
+                } else {
+                    contentBox.style.display = 'grid';
+                    const secData = charData.sections[sectionId];
+                    
+                    layout.querySelector('.page-title').innerText = secData.title;
+                    layout.querySelector('.page-subtitle').innerText = secData.subtitle;
+                    contentBox.innerHTML = secData.content;
+                    
+                    if(layout.querySelector('.page-quote') && secData.quote) {
+                        layout.querySelector('.page-quote').innerText = secData.quote;
+                    }
+
+                    changeImage(secData.image);
+                }
+                
+                contentBox.style.opacity = '1';
+                contentBox.style.transform = 'translateY(0)';
+            }, 250);
+        }
+
+        // ==========================================
+        // 5. IMAGE & BACKGROUND SYNC LOGIC
+        // ==========================================
+        function changeImage(imageSrc, thumbnailElement = null) {
+            const layout = document.getElementById(`layout-${activeChar}`);
+            const charData = characterDB[activeChar];
+            
+            if (thumbnailElement) {
+                // Update active state in UI
+                layout.querySelectorAll('.image-gallery img, .full-gallery img').forEach(img => img.classList.remove('active'));
+                thumbnailElement.classList.add('active');
+                
+                // Manual selection: Check if char has bgVideo, if so KEEP IT, else set static background
+                if (!charData.bgVideo) {
+                    forceHideVideo();
+                    document.body.style.backgroundImage = `url('${imageSrc}')`;
+                } else {
+                    forceShowVideo(charData.bgVideo);
+                }
+            } else {
+                // Auto-sync
+                layout.querySelectorAll('.image-gallery img').forEach(img => {
+                    img.classList.remove('active');
+                    if(img.getAttribute('src') === imageSrc) img.classList.add('active');
+                });
+
+                if (!charData.bgVideo) {
+                    forceHideVideo();
+                    document.body.style.backgroundImage = `url('${imageSrc}')`;
+                } else {
+                    forceShowVideo(charData.bgVideo);
+                }
+            }
+            
+            const displayImg = layout.querySelector('.main-display-img');
+            if (displayImg) displayImg.src = imageSrc;
+        }
+
+        // ==========================================
+        // 6. ADAPTIVE 3D TILT ENGINE (Desktop Only)
+        // ==========================================
+        if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+            document.body.addEventListener('mousemove', (e) => {
+                const wrapper = e.target.closest('.tilt-wrapper');
+                if (!wrapper) return;
+                
+                const card = wrapper.querySelector('.tilt-card');
+                const rect = wrapper.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                
+                const rotateX = ((y - centerY) / centerY) * -12; 
+                const rotateY = ((x - centerX) / centerX) * 12;
+
+                card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+            });
+
+            document.body.addEventListener('mouseleave', (e) => {
+                const wrapper = e.target.closest('.tilt-wrapper');
+                if (!wrapper) return;
+                const card = wrapper.querySelector('.tilt-card');
+                card.style.transform = `rotateX(0deg) rotateY(0deg)`;
+            }, true);
+        }
+
+        // Initialize App
+        window.addEventListener('DOMContentLoaded', () => {
+            switchCharacter('sukuna'); 
+        });
+    </script>
+</body>
+</html>
