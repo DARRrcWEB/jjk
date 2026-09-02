@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <!-- Responsive Viewport for Android / iOS -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
     <title>Jujutsu Kaisen | Character Database</title>
     
@@ -26,7 +27,6 @@
             --safe-bottom: env(safe-area-inset-bottom, 0px);
             --safe-left: env(safe-area-inset-left, 0px);
             --safe-right: env(safe-area-inset-right, 0px);
-            --roster-width: 85px;
         }
 
         * {
@@ -92,93 +92,13 @@
         }
 
         /* ==========================================
-           2. ADAPTIVE CHARACTER ROSTER MENU
-           ========================================== */
-        .roster-menu {
-            position: fixed;
-            left: calc(15px + var(--safe-left));
-            top: 50%;
-            transform: translateY(-50%);
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            z-index: 300;
-            background: rgba(10, 10, 15, 0.65);
-            padding: 18px 12px;
-            border-radius: 40px;
-            border: 1px solid var(--border-glass);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            max-height: 85vh;
-            max-height: 85dvh;
-            overflow-y: auto;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
-        }
-
-        .roster-menu::-webkit-scrollbar { width: 0px; }
-
-        .char-icon {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            cursor: pointer;
-            border: 2px solid transparent;
-            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.3s ease, opacity 0.3s ease;
-            overflow: hidden;
-            opacity: 0.5;
-            position: relative;
-            flex-shrink: 0;
-        }
-
-        .char-icon img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .char-icon:hover, .char-icon.active {
-            opacity: 1;
-            border-color: var(--theme-color);
-            transform: scale(1.18);
-            box-shadow: 0 0 16px var(--theme-color);
-        }
-
-        /* Desktop Hover Tooltips */
-        @media (hover: hover) and (pointer: fine) {
-            .char-icon::after {
-                content: attr(data-name);
-                position: absolute;
-                left: 65px;
-                top: 50%;
-                transform: translateY(-50%) translateX(-10px);
-                background: var(--theme-color);
-                color: #000;
-                padding: 6px 12px;
-                border-radius: 6px;
-                font-size: 0.8rem;
-                font-weight: 700;
-                font-family: 'Oswald', sans-serif;
-                opacity: 0;
-                pointer-events: none;
-                transition: opacity 0.3s ease, transform 0.3s ease;
-                white-space: nowrap;
-                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-                z-index: 201;
-            }
-            .char-icon:hover::after {
-                opacity: 1;
-                transform: translateY(-50%) translateX(0);
-            }
-        }
-
-        /* ==========================================
-           3. RESPONSIVE NAVIGATION
+           2. RESPONSIVE NAVIGATION & SWITCHER
            ========================================== */
         nav {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: calc(15px + var(--safe-top)) calc(30px + var(--safe-right)) 15px calc(var(--roster-width) + 35px + var(--safe-left));
+            padding: calc(15px + var(--safe-top)) calc(30px + var(--safe-right)) 15px calc(30px + var(--safe-left));
             background: linear-gradient(180deg, rgba(5, 5, 10, 0.85) 0%, rgba(5, 5, 10, 0.3) 70%, transparent 100%);
             position: sticky;
             top: 0;
@@ -190,18 +110,36 @@
 
         .nav-logo {
             font-family: 'Oswald', sans-serif;
-            font-size: clamp(1.4rem, 2.5vw, 2rem);
+            font-size: clamp(1.2rem, 2vw, 1.8rem);
             font-weight: 700;
             letter-spacing: 2px;
             color: #fff;
             text-shadow: 0 0 15px var(--theme-color);
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             white-space: nowrap;
+            cursor: pointer;
+            padding: 8px 18px;
+            border-radius: 30px;
+            background: rgba(0,0,0,0.4);
+            border: 1px solid var(--border-glass);
+            transition: all 0.3s ease;
+        }
+
+        .nav-logo:hover {
+            background: rgba(0,0,0,0.7);
+            border-color: var(--theme-color);
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
         }
 
         .nav-logo i { color: var(--theme-color); transition: color 0.4s ease; }
+
+        .expand-icon {
+            font-size: 1rem;
+            color: var(--text-muted);
+            transition: transform 0.3s ease;
+        }
 
         .nav-links {
             display: flex;
@@ -243,6 +181,94 @@
         }
 
         /* ==========================================
+           3. CHARACTER DROPDOWN ROSTER MENU
+           ========================================== */
+        .roster-menu {
+            position: fixed;
+            left: calc(30px + var(--safe-left));
+            top: calc(85px + var(--safe-top));
+            transform: translateY(-20px) scale(0.95);
+            opacity: 0;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            z-index: 300;
+            background: rgba(10, 10, 15, 0.9);
+            padding: 18px 15px;
+            border-radius: 25px;
+            border: 1px solid var(--border-glass);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            max-height: 70vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .roster-menu.expanded {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0) scale(1);
+        }
+
+        .roster-menu::-webkit-scrollbar { width: 0px; }
+
+        .char-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), border-color 0.3s ease, opacity 0.3s ease;
+            overflow: hidden;
+            opacity: 0.5;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .char-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .char-icon:hover, .char-icon.active {
+            opacity: 1;
+            border-color: var(--theme-color);
+            transform: scale(1.18);
+            box-shadow: 0 0 16px var(--theme-color);
+        }
+
+        /* Desktop Hover Tooltips for Roster */
+        @media (hover: hover) and (pointer: fine) {
+            .char-icon::after {
+                content: attr(data-name);
+                position: absolute;
+                left: 65px;
+                top: 50%;
+                transform: translateY(-50%) translateX(-10px);
+                background: var(--theme-color);
+                color: #000;
+                padding: 6px 12px;
+                border-radius: 6px;
+                font-size: 0.8rem;
+                font-weight: 700;
+                font-family: 'Oswald', sans-serif;
+                opacity: 0;
+                pointer-events: none;
+                transition: opacity 0.3s ease, transform 0.3s ease;
+                white-space: nowrap;
+                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+                z-index: 301;
+            }
+            .char-icon:hover::after {
+                opacity: 1;
+                transform: translateY(-50%) translateX(0);
+            }
+        }
+
+        /* ==========================================
            4. FLUID MAIN CONTENT & 3D LAYOUT
            ========================================== */
         #layout-container {
@@ -269,7 +295,7 @@
             display: grid;
             grid-template-columns: 1.15fr 0.85fr;
             gap: clamp(25px, 4vw, 55px);
-            padding: 30px calc(40px + var(--safe-right)) 40px calc(var(--roster-width) + 35px + var(--safe-left));
+            padding: 30px calc(40px + var(--safe-right)) 40px calc(40px + var(--safe-left));
             max-width: 1650px;
             margin: 0 auto;
             width: 100%;
@@ -551,11 +577,131 @@
         }
 
         /* ==========================================
-           5. FOOTER
+           5. FEEDBACK FORM (BOTTOM LEFT)
+           ========================================== */
+        .feedback-toggle {
+            position: fixed;
+            bottom: 25px;
+            left: 25px;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-glass);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            z-index: 400;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+            transition: all 0.3s ease;
+        }
+
+        .feedback-toggle:hover {
+            color: var(--theme-color);
+            border-color: var(--theme-color);
+            transform: scale(1.1);
+            box-shadow: 0 0 15px var(--theme-color);
+        }
+
+        .feedback-panel {
+            position: fixed;
+            bottom: 90px;
+            left: 25px;
+            width: 320px;
+            background: var(--panel-bg);
+            border: 1px solid var(--border-glass);
+            border-radius: 16px;
+            padding: 20px;
+            z-index: 400;
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+            display: none;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .feedback-panel.show {
+            display: block;
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .feedback-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-family: 'Oswald', sans-serif;
+            color: var(--theme-color);
+            font-size: 1.2rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 10px;
+        }
+
+        .feedback-header i {
+            cursor: pointer;
+            color: var(--text-main);
+            transition: color 0.3s;
+        }
+        .feedback-header i:hover { color: var(--theme-color); }
+
+        .feedback-panel form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .feedback-panel input, .feedback-panel textarea {
+            width: 100%;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            padding: 10px 12px;
+            color: #fff;
+            font-family: 'Poppins', sans-serif;
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .feedback-panel input:focus, .feedback-panel textarea:focus {
+            border-color: var(--theme-color);
+        }
+
+        .feedback-panel button {
+            background: var(--theme-color);
+            color: #fff;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            font-family: 'Oswald', sans-serif;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .feedback-panel button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px var(--theme-color);
+        }
+
+        /* ==========================================
+           6. FOOTER
            ========================================== */
         footer {
             text-align: center;
-            padding: 20px 20px calc(20px + var(--safe-bottom)) calc(var(--roster-width) + 20px + var(--safe-left));
+            padding: 20px 20px calc(20px + var(--safe-bottom)) calc(20px + var(--safe-left));
             background: rgba(5, 5, 10, 0.85);
             border-top: 1px solid rgba(255, 255, 255, 0.05);
             color: var(--text-muted);
@@ -565,35 +711,33 @@
         }
 
         /* ==========================================
-           6. CROSS-DEVICE RESPONSIVE BREAKPOINTS
+           7. CROSS-DEVICE RESPONSIVE BREAKPOINTS
            ========================================== */
         @media (max-width: 1100px) {
-            :root { --roster-width: 70px; }
             .container { grid-template-columns: 1fr; gap: 35px; padding-top: 20px; }
             .hero-visual { order: -1; }
             .tilt-card { max-width: 320px; }
         }
 
         @media (max-width: 768px) {
-            :root { --roster-width: 0px; }
             .roster-menu {
-                left: 50%; top: auto; bottom: calc(10px + var(--safe-bottom));
-                transform: translateX(-50%); flex-direction: row; padding: 10px 16px;
-                border-radius: 35px; max-height: none; width: calc(100% - 30px);
-                max-width: 480px; justify-content: space-between; overflow-x: auto;
-                background: rgba(12, 10, 15, 0.85); box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+                left: 15px; top: 75px; transform: translateY(-20px) scale(0.95);
+                flex-direction: row; flex-wrap: wrap; padding: 15px;
+                border-radius: 20px; width: calc(100% - 30px);
+                justify-content: flex-start;
             }
-            .char-icon { width: 42px; height: 42px; }
-            nav { padding: calc(12px + var(--safe-top)) 15px 12px 15px; flex-direction: column; gap: 10px; }
+            nav { padding: calc(12px + var(--safe-top)) 15px 12px 15px; flex-direction: column; gap: 15px; align-items: flex-start; }
             .nav-links { width: 100%; justify-content: flex-start; gap: 15px; }
-            .container { padding: 15px 15px calc(90px + var(--safe-bottom)) 15px; }
+            .container { padding: 15px 15px calc(30px + var(--safe-bottom)) 15px; } 
             .tilt-card { max-width: 270px; transform: none !important; }
             .card-badge { width: 45px; height: 45px; font-size: 1.2rem; bottom: -10px; right: -10px; }
-            footer { padding: 15px 15px calc(85px + var(--safe-bottom)) 15px; }
+            footer { padding: 15px 15px calc(25px + var(--safe-bottom)) 15px; }
+            .feedback-toggle { bottom: calc(25px + var(--safe-bottom)); left: 15px; width: 45px; height: 45px; font-size: 1.2rem; }
+            .feedback-panel { bottom: calc(85px + var(--safe-bottom)); left: 15px; width: calc(100% - 30px); }
         }
 
         @media (max-width: 380px) {
-            .char-icon { width: 36px; height: 36px; }
+            .char-icon { width: 40px; height: 40px; }
             .info-grid { grid-template-columns: 1fr; }
             .full-gallery { grid-template-columns: repeat(2, 1fr); }
         }
@@ -606,8 +750,20 @@
     
     <div class="bg-overlay" id="bg-overlay"></div>
 
-    <!-- 📱 Character Selector Roster -->
-    <aside class="roster-menu" aria-label="Character Selection">
+    <!-- 🌐 Global Top Navigation with Dropdown Trigger -->
+    <nav>
+        <div class="nav-logo" id="nav-logo-element" onclick="toggleRoster()" title="Switch Character">
+            <i class="fa-solid fa-fire" id="nav-icon"></i> 
+            <span id="nav-text">SUKUNA</span>
+            <i class="fa-solid fa-chevron-down expand-icon" id="expand-icon"></i>
+        </div>
+        <div class="nav-links" id="dynamic-nav">
+            <!-- Nav links injected via JS -->
+        </div>
+    </nav>
+
+    <!-- 📱 Character Selector Roster (Dropdown) -->
+    <aside class="roster-menu" id="roster-menu" aria-label="Character Selection">
         <div class="char-icon active" id="btn-sukuna" data-name="Ryomen Sukuna" onclick="switchCharacter('sukuna')">
             <img src="photos/sukuna 4.jpg" alt="Sukuna" loading="lazy">
         </div>
@@ -634,20 +790,32 @@
         </div>
     </aside>
 
-    <!-- 🌐 Global Top Navigation -->
-    <nav>
-        <div class="nav-logo" id="nav-logo-element">
-            <i class="fa-solid fa-fire" id="nav-icon"></i> <span id="nav-text">SUKUNA</span>
-        </div>
-        <div class="nav-links" id="dynamic-nav">
-            <!-- Nav links injected via JS -->
-        </div>
-    </nav>
-
     <!-- ⚡ Dynamic Main Layout Container -->
     <main id="layout-container">
         <!-- Injected via JavaScript -->
     </main>
+
+    <!-- 💬 Netlify Feedback Form -->
+    <div class="feedback-toggle" onclick="toggleFeedback()">
+        <i class="fa-solid fa-comment-dots"></i>
+    </div>
+
+    <div class="feedback-panel" id="feedback-panel">
+        <div class="feedback-header">
+            <h3>Send Feedback</h3>
+            <i class="fa-solid fa-xmark" onclick="toggleFeedback()"></i>
+        </div>
+        <form name="Kushagra_Feedback" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+            <input type="hidden" name="form-name" value="Kushagra_Feedback" />
+            <input type="hidden" name="intended_recipient" value="kushagrakashayp@gmail.com" />
+            <div style="display:none;"><input name="bot-field" /></div>
+            
+            <input type="text" name="name" placeholder="Your Name" required>
+            <input type="email" name="email" placeholder="Your Email" required>
+            <textarea name="message" placeholder="Tell me what you think..." rows="4" required></textarea>
+            <button type="submit">Send <i class="fa-solid fa-paper-plane"></i></button>
+        </form>
+    </div>
 
     <!-- 📄 Footer -->
     <footer>
@@ -930,11 +1098,11 @@
                     },
                     about: { title: "PROFILE DATA", subtitle: "The Fallen One", quote: "\"I just couldn't wear a fake smile anymore.\"", image: "photos/g2.jpg",
                         content: `<div class="info-card"><h3><i class="fa-solid fa-address-card"></i> BIOMETRICS</h3><ul><li><span>Full Name</span> <span>Suguru Geto (夏油 傑)</span></li><li><span>Status</span> <span>Deceased / Possessed</span></li><li><span>Grade</span> <span>Special Grade</span></li></ul></div>
-                                  <div class="info-card"><h3><i class="fa-solid fa-masks-theater"></i> PERSONALITY</h3><p>Once a deeply moral and kind student, the horrors of protecting ungrateful humans broke him, leading him to view non-sorcerers as evolutionary dead ends, or 'monkeys'.</p></div>`
+                                  <div class="info-card"><h3><i class="fa-solid fa-masks-theater"></i> PERSONALITY</h3><p>Once a deeply moral and kind student, the horrors of protecting ungrateful humans broke him, leading him to view non-sorcerers as evolutionary dead ends.</p></div>`
                     },
                     energy: { title: "CURSE MANIPULATION", subtitle: "Consuming the Darkness", quote: "\"Taste like a rag used to wipe up vomit.\"", image: "photos/g3.jpg",
                         content: `<div class="info-card"><h3><i class="fa-solid fa-ghost"></i> ABSORPTION</h3><p>His innate technique allows him to capture and control vagrant cursed spirits by ingesting them. He can summon and control thousands simultaneously.</p></div>
-                                  <div class="info-card"><h3><i class="fa-solid fa-infinity"></i> TACTICAL MASTERY</h3><p>Using his vast collection of curses, Geto can spy, shield himself, or launch massive area-of-effect attacks using the combined power of his spirits.</p></div>`
+                                  <div class="info-card"><h3><i class="fa-solid fa-infinity"></i> TACTICAL MASTERY</h3><p>Using his vast collection of curses, Geto can spy, shield himself, or launch massive area-of-effect attacks.</p></div>`
                     },
                     affiliate: { title: "IDEOLOGY", subtitle: "Star Religious Group", quote: "\"Monkeys.\"", image: "photos/g4.jpg",
                         content: `<div class="info-card"><h3><i class="fa-solid fa-people-group"></i> CULT LEADER</h3><p>Geto took over the Star Religious Group and used it as a front to gather money and curses from wealthy non-sorcerers.</p></div>
@@ -942,7 +1110,7 @@
                     },
                     strength: { title: "MAXIMUM UZUMAKI", subtitle: "Supreme Art", quote: "\"Let's curse each other to our hearts' content!\"", image: "photos/g5.jpg",
                         content: `<div class="info-card"><h3><i class="fa-solid fa-hurricane"></i> UZUMAKI</h3><p>Geto's Maximum Technique combines a vast number of collected cursed spirits into one hyper-dense attack of pure cursed energy.</p></div>
-                                  <div class="info-card"><h3><i class="fa-solid fa-khanda"></i> PLAYFUL CLOUD</h3><p>A master in hand-to-hand combat, Geto effectively wields the Special Grade cursed tool Playful Cloud, overwhelming even seasoned close-quarters fighters.</p></div>`
+                                  <div class="info-card"><h3><i class="fa-solid fa-khanda"></i> PLAYFUL CLOUD</h3><p>A master in hand-to-hand combat, Geto effectively wields the Special Grade cursed tool Playful Cloud.</p></div>`
                     }
                 }
             },
@@ -1053,11 +1221,51 @@
         }
 
         // ==========================================
-        // 3. CHARACTER SWITCHING ENGINE
+        // 3. UI DROPDOWN TOGGLE FOR TOP-LEFT NAV
+        // ==========================================
+        function toggleRoster() {
+            const roster = document.getElementById('roster-menu');
+            const icon = document.getElementById('expand-icon');
+            roster.classList.toggle('expanded');
+            
+            if (roster.classList.contains('expanded')) {
+                icon.classList.remove('fa-chevron-down');
+                icon.classList.add('fa-chevron-up');
+            } else {
+                icon.classList.remove('fa-chevron-up');
+                icon.classList.add('fa-chevron-down');
+            }
+        }
+
+        // Close roster when clicking outside
+        document.addEventListener('click', function(event) {
+            const roster = document.getElementById('roster-menu');
+            const trigger = document.getElementById('nav-logo-element');
+            if (roster && trigger && roster.classList.contains('expanded') && !roster.contains(event.target) && !trigger.contains(event.target)) {
+                toggleRoster();
+            }
+        });
+
+        // ==========================================
+        // 4. UI FEEDBACK TOGGLE
+        // ==========================================
+        function toggleFeedback() {
+            const panel = document.getElementById('feedback-panel');
+            panel.classList.toggle('show');
+        }
+
+        // ==========================================
+        // 5. CHARACTER SWITCHING ENGINE
         // ==========================================
         function switchCharacter(charId) {
             activeChar = charId;
             const data = characterDB[charId];
+
+            // Close roster dropdown if open
+            const roster = document.getElementById('roster-menu');
+            if(roster && roster.classList.contains('expanded')) {
+                toggleRoster();
+            }
 
             // Update Roster UI
             document.querySelectorAll('.char-icon').forEach(icon => icon.classList.remove('active'));
@@ -1136,7 +1344,7 @@
         }
 
         // ==========================================
-        // 4. CONTENT & GALLERY INJECTION
+        // 6. CONTENT & GALLERY INJECTION
         // ==========================================
         function loadContent(sectionId) {
             const charData = characterDB[activeChar];
@@ -1203,7 +1411,7 @@
         }
 
         // ==========================================
-        // 5. IMAGE & BACKGROUND SYNC LOGIC
+        // 7. IMAGE & BACKGROUND SYNC LOGIC
         // ==========================================
         function changeImage(imageSrc, thumbnailElement = null) {
             const layout = document.getElementById(`layout-${activeChar}`);
@@ -1214,7 +1422,7 @@
                 layout.querySelectorAll('.image-gallery img, .full-gallery img').forEach(img => img.classList.remove('active'));
                 thumbnailElement.classList.add('active');
                 
-                // Manual selection: Check if char has bgVideo, if so KEEP IT, else set static background
+                // Do NOT hide the video if the character has a bgVideo. 
                 if (!charData.bgVideo) {
                     forceHideVideo();
                     document.body.style.backgroundImage = `url('${imageSrc}')`;
@@ -1241,7 +1449,7 @@
         }
 
         // ==========================================
-        // 6. ADAPTIVE 3D TILT ENGINE (Desktop Only)
+        // 8. ADAPTIVE 3D TILT ENGINE (Desktop Only)
         // ==========================================
         if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
             document.body.addEventListener('mousemove', (e) => {
