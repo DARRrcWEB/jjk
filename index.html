@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <!-- Responsive Viewport for Android / iOS -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <!-- Forced Desktop Viewport: Makes Android/iOS render the desktop layout -->
+    <meta name="viewport" content="width=1280">
     <title>Jujutsu Kaisen | Character Database</title>
     
     <!-- Cross-Platform Fonts -->
@@ -23,10 +23,6 @@
             --text-muted: #94a3b8;
             --panel-bg: rgba(15, 10, 10, 0.75);
             --border-glass: rgba(255, 255, 255, 0.12);
-            --safe-top: env(safe-area-inset-top, 0px);
-            --safe-bottom: env(safe-area-inset-bottom, 0px);
-            --safe-left: env(safe-area-inset-left, 0px);
-            --safe-right: env(safe-area-inset-right, 0px);
         }
 
         * {
@@ -92,13 +88,13 @@
         }
 
         /* ==========================================
-           2. RESPONSIVE NAVIGATION & SWITCHER
+           2. RESPONSIVE NAVIGATION & TOP-LEFT SWITCHER
            ========================================== */
         nav {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: calc(15px + var(--safe-top)) calc(30px + var(--safe-right)) 15px calc(30px + var(--safe-left));
+            padding: 15px 30px 15px 30px;
             background: linear-gradient(180deg, rgba(5, 5, 10, 0.85) 0%, rgba(5, 5, 10, 0.3) 70%, transparent 100%);
             position: sticky;
             top: 0;
@@ -185,8 +181,8 @@
            ========================================== */
         .roster-menu {
             position: fixed;
-            left: calc(30px + var(--safe-left));
-            top: calc(85px + var(--safe-top));
+            left: 30px;
+            top: 85px;
             transform: translateY(-20px) scale(0.95);
             opacity: 0;
             pointer-events: none;
@@ -200,12 +196,13 @@
             border: 1px solid var(--border-glass);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
-            max-height: 70vh;
+            max-height: 75vh;
             overflow-y: auto;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
             transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
+        /* Toggled via JS to show dropdown */
         .roster-menu.expanded {
             opacity: 1;
             pointer-events: auto;
@@ -240,7 +237,7 @@
             box-shadow: 0 0 16px var(--theme-color);
         }
 
-        /* Desktop Hover Tooltips for Roster */
+        /* Hover Tooltips for Roster */
         @media (hover: hover) and (pointer: fine) {
             .char-icon::after {
                 content: attr(data-name);
@@ -295,7 +292,7 @@
             display: grid;
             grid-template-columns: 1.15fr 0.85fr;
             gap: clamp(25px, 4vw, 55px);
-            padding: 30px calc(40px + var(--safe-right)) 40px calc(40px + var(--safe-left));
+            padding: 30px 40px 40px 40px;
             max-width: 1650px;
             margin: 0 auto;
             width: 100%;
@@ -577,41 +574,48 @@
         }
 
         /* ==========================================
-           5. FEEDBACK FORM (BOTTOM LEFT)
+           5. ANIMATED FEEDBACK FORM (WITH 5-STAR RATING)
            ========================================== */
+        @keyframes pulseFeedback {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 var(--theme-color); }
+            50% { transform: scale(1.05); box-shadow: 0 0 0 15px rgba(255,255,255,0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+        }
+
         .feedback-toggle {
             position: fixed;
-            bottom: 25px;
-            left: 25px;
-            width: 55px;
-            height: 55px;
+            bottom: 30px;
+            left: 30px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
             background: var(--panel-bg);
-            border: 1px solid var(--border-glass);
-            color: var(--text-main);
+            border: 2px solid var(--theme-color);
+            color: var(--theme-color);
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 1.5rem;
+            font-size: 1.6rem;
             cursor: pointer;
             z-index: 400;
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+            animation: pulseFeedback 2.5s infinite ease-in-out;
             transition: all 0.3s ease;
         }
 
         .feedback-toggle:hover {
-            color: var(--theme-color);
-            border-color: var(--theme-color);
+            animation: none;
+            background: var(--theme-color);
+            color: #fff;
             transform: scale(1.1);
-            box-shadow: 0 0 15px var(--theme-color);
+            box-shadow: 0 0 20px var(--theme-color);
         }
 
         .feedback-panel {
             position: fixed;
-            bottom: 90px;
-            left: 25px;
+            bottom: 100px;
+            left: 30px;
             width: 320px;
             background: var(--panel-bg);
             border: 1px solid var(--border-glass);
@@ -640,7 +644,7 @@
             margin-bottom: 15px;
             font-family: 'Oswald', sans-serif;
             color: var(--theme-color);
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             border-bottom: 1px solid rgba(255,255,255,0.1);
             padding-bottom: 10px;
         }
@@ -650,12 +654,33 @@
             color: var(--text-main);
             transition: color 0.3s;
         }
-        .feedback-header i:hover { color: var(--theme-color); }
+        .feedback-header i:hover { color: var(--theme-color); transform: scale(1.2); }
 
         .feedback-panel form {
             display: flex;
             flex-direction: column;
             gap: 12px;
+        }
+
+        /* 5-Star Rating CSS */
+        .star-rating {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin: 5px 0 10px;
+        }
+        .star-rating i {
+            font-size: 1.6rem;
+            color: rgba(255,255,255,0.3);
+            cursor: pointer;
+            transition: color 0.2s ease, transform 0.2s ease;
+        }
+        .star-rating i.hovered, .star-rating i.active-star {
+            color: #f59e0b; /* Golden Yellow */
+        }
+        .star-rating i.selected-star {
+            transform: scale(1.2);
+            color: #f59e0b;
         }
 
         .feedback-panel input, .feedback-panel textarea {
@@ -668,32 +693,35 @@
             font-family: 'Poppins', sans-serif;
             font-size: 0.9rem;
             outline: none;
-            transition: border-color 0.3s;
+            transition: border-color 0.3s, box-shadow 0.3s;
         }
 
         .feedback-panel input:focus, .feedback-panel textarea:focus {
             border-color: var(--theme-color);
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
         }
 
         .feedback-panel button {
             background: var(--theme-color);
             color: #fff;
             border: none;
-            padding: 10px;
+            padding: 12px;
             border-radius: 8px;
             font-family: 'Oswald', sans-serif;
             font-size: 1.1rem;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
             display: flex;
             justify-content: center;
             align-items: center;
             gap: 8px;
+            margin-top: 5px;
         }
 
         .feedback-panel button:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 15px var(--theme-color);
+            filter: brightness(1.2);
         }
 
         /* ==========================================
@@ -701,7 +729,7 @@
            ========================================== */
         footer {
             text-align: center;
-            padding: 20px 20px calc(20px + var(--safe-bottom)) calc(20px + var(--safe-left));
+            padding: 20px 20px 20px 20px;
             background: rgba(5, 5, 10, 0.85);
             border-top: 1px solid rgba(255, 255, 255, 0.05);
             color: var(--text-muted);
@@ -710,36 +738,11 @@
             z-index: 10;
         }
 
-        /* ==========================================
-           7. CROSS-DEVICE RESPONSIVE BREAKPOINTS
-           ========================================== */
+        /* Responsive Fallbacks just in case window is resized */
         @media (max-width: 1100px) {
             .container { grid-template-columns: 1fr; gap: 35px; padding-top: 20px; }
             .hero-visual { order: -1; }
             .tilt-card { max-width: 320px; }
-        }
-
-        @media (max-width: 768px) {
-            .roster-menu {
-                left: 15px; top: 75px; transform: translateY(-20px) scale(0.95);
-                flex-direction: row; flex-wrap: wrap; padding: 15px;
-                border-radius: 20px; width: calc(100% - 30px);
-                justify-content: flex-start;
-            }
-            nav { padding: calc(12px + var(--safe-top)) 15px 12px 15px; flex-direction: column; gap: 15px; align-items: flex-start; }
-            .nav-links { width: 100%; justify-content: flex-start; gap: 15px; }
-            .container { padding: 15px 15px calc(30px + var(--safe-bottom)) 15px; } 
-            .tilt-card { max-width: 270px; transform: none !important; }
-            .card-badge { width: 45px; height: 45px; font-size: 1.2rem; bottom: -10px; right: -10px; }
-            footer { padding: 15px 15px calc(25px + var(--safe-bottom)) 15px; }
-            .feedback-toggle { bottom: calc(25px + var(--safe-bottom)); left: 15px; width: 45px; height: 45px; font-size: 1.2rem; }
-            .feedback-panel { bottom: calc(85px + var(--safe-bottom)); left: 15px; width: calc(100% - 30px); }
-        }
-
-        @media (max-width: 380px) {
-            .char-icon { width: 40px; height: 40px; }
-            .info-grid { grid-template-columns: 1fr; }
-            .full-gallery { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
 </head>
@@ -795,7 +798,7 @@
         <!-- Injected via JavaScript -->
     </main>
 
-    <!-- 💬 Netlify Feedback Form -->
+    <!-- 💬 Netlify Feedback Form with 5-Star Rating -->
     <div class="feedback-toggle" onclick="toggleFeedback()">
         <i class="fa-solid fa-comment-dots"></i>
     </div>
@@ -805,15 +808,29 @@
             <h3>Send Feedback</h3>
             <i class="fa-solid fa-xmark" onclick="toggleFeedback()"></i>
         </div>
+        <!-- Netlify Form Integration -->
         <form name="Kushagra_Feedback" method="POST" data-netlify="true" netlify-honeypot="bot-field">
             <input type="hidden" name="form-name" value="Kushagra_Feedback" />
             <input type="hidden" name="intended_recipient" value="kushagrakashayp@gmail.com" />
             <div style="display:none;"><input name="bot-field" /></div>
             
+            <div style="text-align: center; font-size: 0.9rem; color: var(--text-muted);">Rate your experience:</div>
+            
+            <!-- Interactive 5-Star Rating UI -->
+            <div class="star-rating">
+                <i class="fa-regular fa-star" data-value="1"></i>
+                <i class="fa-regular fa-star" data-value="2"></i>
+                <i class="fa-regular fa-star" data-value="3"></i>
+                <i class="fa-regular fa-star" data-value="4"></i>
+                <i class="fa-regular fa-star" data-value="5"></i>
+            </div>
+            <input type="hidden" name="rating" id="rating-value" value="0" required>
+            
             <input type="text" name="name" placeholder="Your Name" required>
             <input type="email" name="email" placeholder="Your Email" required>
             <textarea name="message" placeholder="Tell me what you think..." rows="4" required></textarea>
-            <button type="submit">Send <i class="fa-solid fa-paper-plane"></i></button>
+            
+            <button type="submit">Submit <i class="fa-solid fa-paper-plane"></i></button>
         </form>
     </div>
 
@@ -1247,19 +1264,65 @@
         });
 
         // ==========================================
-        // 4. UI FEEDBACK TOGGLE
+        // 4. UI FEEDBACK TOGGLE & STAR RATING LOGIC
         // ==========================================
         function toggleFeedback() {
             const panel = document.getElementById('feedback-panel');
             panel.classList.toggle('show');
         }
 
+        // Star Rating JS Logic
+        document.addEventListener('DOMContentLoaded', () => {
+            const stars = document.querySelectorAll('.star-rating i');
+            const ratingInput = document.getElementById('rating-value');
+            
+            stars.forEach(star => {
+                star.addEventListener('mouseover', function() {
+                    let val = parseInt(this.dataset.value);
+                    stars.forEach(s => {
+                        if (parseInt(s.dataset.value) <= val) {
+                            s.classList.remove('fa-regular');
+                            s.classList.add('fa-solid', 'hovered');
+                        } else {
+                            s.classList.remove('fa-solid', 'hovered');
+                            s.classList.add('fa-regular');
+                        }
+                    });
+                });
+
+                star.addEventListener('mouseout', function() {
+                    let val = parseInt(ratingInput.value);
+                    stars.forEach(s => {
+                        s.classList.remove('hovered');
+                        if (parseInt(s.dataset.value) <= val) {
+                            s.classList.remove('fa-regular');
+                            s.classList.add('fa-solid');
+                        } else {
+                            s.classList.remove('fa-solid');
+                            s.classList.add('fa-regular');
+                        }
+                    });
+                });
+
+                star.addEventListener('click', function() {
+                    ratingInput.value = this.dataset.value;
+                    stars.forEach(s => s.classList.remove('selected-star'));
+                    this.classList.add('selected-star');
+                });
+            });
+            
+            // Auto-load main character on initial launch
+            switchCharacter('sukuna'); 
+        });
+
         // ==========================================
         // 5. CHARACTER SWITCHING ENGINE
         // ==========================================
         function switchCharacter(charId) {
-            activeChar = charId;
             const data = characterDB[charId];
+            if (!data) return; // Failsafe if character isn't found
+            
+            activeChar = charId;
 
             // Close roster dropdown if open
             const roster = document.getElementById('roster-menu');
@@ -1349,6 +1412,7 @@
         function loadContent(sectionId) {
             const charData = characterDB[activeChar];
             const layout = document.getElementById(`layout-${activeChar}`);
+            if (!layout) return;
             
             // Update Navigation State
             document.querySelectorAll('#dynamic-nav a').forEach(link => {
@@ -1372,24 +1436,28 @@
                     
                     // Build Full Animated Gallery with Downloads
                     let galleryHTML = '<div class="full-gallery" style="grid-column: span 2;">';
-                    charData.galleryImages.forEach(imgSrc => {
-                        galleryHTML += `
-                            <div class="gallery-item-wrap">
-                                <img src="${imgSrc}" alt="Gallery item" loading="lazy" onclick="changeImage('${imgSrc}', this)">
-                                <button type="button" class="download-btn" title="Download Image" onclick="event.stopPropagation(); downloadImageFile('${imgSrc}')">
-                                    <i class="fa-solid fa-download"></i>
-                                </button>
-                            </div>
-                        `;
-                    });
+                    if (charData.galleryImages) {
+                        charData.galleryImages.forEach(imgSrc => {
+                            galleryHTML += `
+                                <div class="gallery-item-wrap">
+                                    <img src="${imgSrc}" alt="Gallery item" loading="lazy" onclick="changeImage('${imgSrc}', this)">
+                                    <button type="button" class="download-btn" title="Download Image" onclick="event.stopPropagation(); downloadImageFile('${imgSrc}')">
+                                        <i class="fa-solid fa-download"></i>
+                                    </button>
+                                </div>
+                            `;
+                        });
+                    }
                     galleryHTML += '</div>';
 
                     layout.querySelector('.page-title').innerText = "GALLERY";
                     layout.querySelector('.page-subtitle').innerText = "Visual Archives & Downloads";
-                    layout.querySelector('.page-quote').innerText = "\"Download full-resolution archives.\"";
+                    if(layout.querySelector('.page-quote')) layout.querySelector('.page-quote').innerText = "\"Download full-resolution archives.\"";
                     contentBox.innerHTML = galleryHTML;
 
-                    changeImage(charData.galleryImages[0]);
+                    if (charData.galleryImages && charData.galleryImages.length > 0) {
+                        changeImage(charData.galleryImages[0]);
+                    }
                 } else {
                     contentBox.style.display = 'grid';
                     const secData = charData.sections[sectionId];
@@ -1415,6 +1483,7 @@
         // ==========================================
         function changeImage(imageSrc, thumbnailElement = null) {
             const layout = document.getElementById(`layout-${activeChar}`);
+            if (!layout) return;
             const charData = characterDB[activeChar];
             
             if (thumbnailElement) {
@@ -1477,11 +1546,6 @@
                 card.style.transform = `rotateX(0deg) rotateY(0deg)`;
             }, true);
         }
-
-        // Initialize App
-        window.addEventListener('DOMContentLoaded', () => {
-            switchCharacter('sukuna'); 
-        });
     </script>
 </body>
 </html>
